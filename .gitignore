@@ -1,1 +1,6 @@
 venv
+.env
+__pycache__
+chroma_db
+response.txt
+output_audio.mp3
