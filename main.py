@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import io
 import fitz
 from docx import Document
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load Environment variables
 load_dotenv()
@@ -16,6 +17,15 @@ openai.api_key = OPENAI_API_KEY
 
 # Initializing FastAPI
 app = FastAPI()
+
+# Allow all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_crendentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize ChromaDB client
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
