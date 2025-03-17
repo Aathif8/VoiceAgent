@@ -3,7 +3,7 @@ import os
 import openai
 import chromadb
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from dotenv import load_dotenv
 import io
 import fitz
@@ -157,10 +157,13 @@ async def process_audio(file: UploadFile = File(...)):
     with open(text_file_path, "w", encoding="utf-8") as text_file:
         text_file.write(f"Transcription:\n{transcribed_text}\n\nResponse:\n{response_text}")
 
+    # Return the correct audio file URL
+    audio_url = f"https://voiceagent-0wtp.onrender.com/audio/{output_audio}"
+
     # Return the audio file
-    return {
+    return JSONResponse({
         "transcription": transcribed_text,
         "response": response_text,
-        "audioFile": FileResponse(output_audio, media_type="audio/mpeg", filename="response.mp3")
-        }
+        "audioFile": audio_url
+        })
 
