@@ -3,7 +3,8 @@ import os
 import openai
 import chromadb
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 import io
 import fitz
@@ -26,6 +27,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve Static file (Audio Files)
+audio_dir = "audio"
+os.makedirs(audio_dir, exist_ok=True)
+app.mount("/audio", StaticFiles(directory=audio_dir), name="audio")
 
 # Initialize ChromaDB client
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
@@ -128,12 +134,14 @@ def generate_speech(text):
         voice="alloy",
         input=text
     )
+    # Save file in audio directory
+    audio_filename = "output_audio.mp3"
+    temp_audio_path = os.path.join(audio_dir, audio_filename)
 
-    temp_audio_path = "output_audio.mp3"
     with open(temp_audio_path, "wb") as audio_file:
         audio_file.write(response.content)
 
-    return temp_audio_path
+    return audio_filename
 
 # API to process audio, and retrieve response in audio
 @app.post("/process_audio/")
@@ -150,15 +158,16 @@ async def process_audio(file: UploadFile = File(...)):
     response_text = generate_response(transcribed_text, relevant_text)
 
     # Response Audio from Text
-    output_audio = generate_speech(response_text)
+    output_audio_filename = generate_speech(response_text)
 
     # Saving the transcription and response text in temp file
-    text_file_path = "response.txt"
+    text_file_path = os.path.join(audio_dir, "response.txt")
     with open(text_file_path, "w", encoding="utf-8") as text_file:
         text_file.write(f"Transcription:\n{transcribed_text}\n\nResponse:\n{response_text}")
 
     # Return the correct audio file URL
-    audio_url = f"https://voiceagent-0wtp.onrender.com/audio/{output_audio}"
+    audio_url = f"https://voiceagent-0wtp.onrender.com/audio/{output_audio_filename}"
+    # audio_url = f"http://localhost:8000/audio/{output_audio_filename}"
 
     # Return the audio file
     return JSONResponse({
