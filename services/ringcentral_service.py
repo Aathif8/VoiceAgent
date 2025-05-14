@@ -1,6 +1,3 @@
-import os
-import requests
-
 async def handle_ringcentral_event(data):
     event_type = data.get("event")
     body = data.get("body", {})

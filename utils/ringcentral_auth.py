@@ -7,7 +7,7 @@ load_dotenv()
 sdk = SDK(os.getenv("RC_CLIENT_ID"), os.getenv("RC_CLIENT_SECRET"), os.getenv("RC_SERVER_URL"))
 
 platform = sdk.platform()
-platform.login(os.getenv("RC_USERNAME"), os.getenv("RC_PASSWORD"))
+platform.login(jwt=os.getenv("RC_JWT"))
 
 def register_webhook():
     url = "https://voiceagent-0wtp.onrender.com/ringcentral/webhook"
