@@ -35,7 +35,7 @@ async def handle_ringcentral_event(data):
     status_code = party.get("status", {}).get("code")
 
     # Handle Connected status - play IVR and listen for DTMF
-    if status_code == "Connected":
+    if status_code == "Answered":
         play_audio(session_id, party_id,"https://voiceagent-0wtp.onrender.com/static/ivr_intro.mp3")
         detect_dtmf(session_id, party_id)
 
