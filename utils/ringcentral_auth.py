@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 from dotenv import load_dotenv
 from ringcentral import SDK
 
@@ -14,8 +15,15 @@ sdk = SDK(RC_CLIENT_ID, RC_CLIENT_SECRET, RC_SERVER_URL)
 
 platform = sdk.platform()
 
-def get_auth_url():
-    return platform.auth_url()
+def get_auth_url(state=""):
+    base_url = f"{RC_SERVER_URL}/restapi/oauthauthorize"
+    params = {
+        "response_type": "code",
+        "client_id": RC_CLIENT_ID,
+        "redirect_uri": RC_REDIRECT_URI,
+        "state": state
+    }
+    return f"{base_url}?{urllib.parse.urlencode(params)}"
 
 
 def login_with_auth_code(code):

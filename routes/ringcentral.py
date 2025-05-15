@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/ringcentral/login")
 def ringcentral_login():
-    url = get_auth_url()
+    url = get_auth_url(state="optional_state")
     return RedirectResponse(url=url)
 
 @router.get("/oauth2callback")
