@@ -29,6 +29,13 @@ async def ringcentral_webhook(request: Request):
     if validation_token:
         return JSONResponse(content={}, headers={"Validation-Token": validation_token})
     
-    data = await request.json()
-    await handle_ringcentral_event(data)
-    return {"status": "received"}
+    # Trying to read JSON if no Validation Token is present
+    try:
+        data = await request.json()
+        await handle_ringcentral_event(data)
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"error": "Invalid or empty JSON body"})
+    
+    print("Received Ringcentral event", data)
+
+    return JSONResponse(content={"message": "Event received"}, status_code=200)
