@@ -1,10 +1,11 @@
 from utils.ringcentral_auth import platform
 
-def transfer_call(session_id, party_id, target_number):
+def transfer_call(session_id, party_id, extension):
     platform.post(
-        f"/restapi/v1.0/account/~/telephony/sessions/{session_id}/parties/{party_id}/transfer",
-        {
-            "phoneNumber": target_number
+        f"/restapi/v1.0/account/~/telephony/sessions/{session_id}/parties/{party_id}/transfer",{
+            "extension": {
+                "extensionNumber": extension
+            }
         }
     )
 
@@ -15,37 +16,34 @@ def play_audio(session_id, party_id, audio_url):
         }
     })
 
+def detect_dtmf(session_id, party_id):
+    platform.post(f"/restapi/v1.0/account/~/telephony/sessions/{session_id}/parties/{party_id}/input", {
+        "dtmf": {
+            "type": "Detect"
+        }
+    })
 async def handle_ringcentral_event(data):
-    event_type = data.get("event")
     body = data.get("body", {})
+    session_id = body.get("sessionId")
     parties = body.get("parties", [])
-    print(f"Received event type: {event_type}")
-
-    if "/telephony/sessions" not in event_type:
-        return
 
     if not parties:
         return
     
     party = parties[0]
-    session_id = body.get("sessionId")
     party_id = party.get("id")
+    status_code = party.get("status", {}).get("code")
 
     # Handle Connected status - play IVR and listen for DTMF
-    if party.get("status", {}).get("code") == "Connected":
+    if status_code == "Connected":
         play_audio(session_id, party_id,"https://voiceagent-0wtp.onrender.com/static/ivr_intro.mp3")
-
-        platform.post(f"/restapi/v1.0/account/~/telephony/sessions/{session_id}/parties/{party_id}/input", {
-            "dtmf": {
-                "type": "Detect"
-            }
-        })
+        detect_dtmf(session_id, party_id)
 
     # Handle DTMF input
     if "dtmf" in body:
         digit = body["dtmf"].get("digit")
 
         if digit == "1":
-            transfer_call(session_id, party_id, +12145566491)
+            transfer_call(session_id, party_id, 103)
         elif digit == "2":
             play_audio(session_id, party_id, "https://voiceagent-0wtp.onrender.com/static/ivr_intro.mp3")
