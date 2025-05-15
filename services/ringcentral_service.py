@@ -9,7 +9,7 @@ def transfer_call(session_id, party_id, target_number):
     )
 
 def play_audio(session_id, party_id, audio_url):
-    platform.post(f"//restapi/v1.0/account/~/telephony/sessions/{session_id}/parties/{party_id}/play", {
+    platform.post(f"/restapi/v1.0/account/~/telephony/sessions/{session_id}/parties/{party_id}/play", {
         "audioFile": {
             "url": audio_url
         }
@@ -21,7 +21,7 @@ async def handle_ringcentral_event(data):
     parties = body.get("parties", [])
     print(f"Received event type: {event_type}")
 
-    if event_type != "/restapi/v1.0/account/~/telephony/sessions":
+    if "/telephony/sessions" not in event_type:
         return
 
     if not parties:
