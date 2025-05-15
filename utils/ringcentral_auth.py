@@ -3,20 +3,20 @@ import urllib.parse
 from dotenv import load_dotenv
 from ringcentral import SDK
 
-print("Starting RingCentral JWT auth...")
-
 load_dotenv()
 
 RC_CLIENT_ID = os.getenv("RC_CLIENT_ID")
 RC_CLIENT_SECRET = os.getenv("RC_CLIENT_SECRET")
 RC_SERVER_URL = os.getenv("RC_SERVER_URL")
 RC_REDIRECT_URI = os.getenv("RC_REDIRECT_URI")
-sdk = SDK(RC_CLIENT_ID, RC_CLIENT_SECRET, RC_SERVER_URL)
 
+print("Starting RingCentral JWT auth...")
+
+sdk = SDK(RC_CLIENT_ID, RC_CLIENT_SECRET, RC_SERVER_URL)
 platform = sdk.platform()
 
 def get_auth_url(state=""):
-    base_url = f"{RC_SERVER_URL}/restapi/oauthauthorize"
+    base_url = f"{RC_SERVER_URL}/restapi/oauth/authorize"
     params = {
         "response_type": "code",
         "client_id": RC_CLIENT_ID,
@@ -27,6 +27,8 @@ def get_auth_url(state=""):
 
 
 def login_with_auth_code(code):
+    print("Logging in with code:", code)
+    
     platform.login(code=code, redirect_uri=RC_REDIRECT_URI)
 
     # Register Webhook after login

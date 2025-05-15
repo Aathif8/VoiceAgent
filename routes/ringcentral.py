@@ -12,11 +12,15 @@ def ringcentral_login():
     return RedirectResponse(url=url)
 
 @router.get("/oauth2callback")
-def oauth2callback(code: str):
+def oauth2callback(code: str=""):
+    print(f"Received OAuth code: {code}")
+    if not code:
+        return JSONResponse(status_code=400, content={"error": "Misssing Authorization code"})
     try:
         token = login_with_auth_code(code)
         return JSONResponse(content={"message": "OAuth login successful", "token": token})
     except Exception as e:
+        print("OAuth login failed:", str(e))
         return JSONResponse(status_code=400, content={"error": str(e)})
     
 @router.post("/ringcentral/webhook")
