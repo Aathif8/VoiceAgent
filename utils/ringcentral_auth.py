@@ -36,7 +36,7 @@ def login_with_auth_code(code):
         "eventFilters": [
             "/restapi/v1.0/account/~/telephony/sessions"
         ],
-        "delivery_mode": {
+        "deliveryMode": {
             "transportType": "WebHook",
             "address": "https://voiceagent-0wtp.onrender.com/ringcentral/webhook"
         },
