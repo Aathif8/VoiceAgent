@@ -31,7 +31,7 @@ def transcribe_audio(audio_bytes):
         audio_file = io.BytesIO(audio_bytes)
 
         with tempfile.NamedTemporaryFile(suffix=".wav") as temp:
-            audio_file.export(temp, format="wav")
+            temp.write(audio_file)
             temp.seek(0)
 
             config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
