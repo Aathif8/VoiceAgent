@@ -27,13 +27,26 @@ HEADERS = {
 
 # Functioon to transcribe audio
 def transcribe_audio(audio_bytes):
-    audio_file = io.BytesIO(audio_bytes)
+    try:
+        audio_file = io.BytesIO(audio_bytes)
 
-    config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
+        with tempfile.NamedTemporaryFile(suffix=".wav") as temp:
+            audio_file.export(temp, format="wav")
+            temp.seek(0)
 
-    response = aai.Transcriber(config=config).transcribe(audio_file)
+            config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
+            
+            response = aai.Transcriber(config=config).transcribe(temp)
 
-    return response.text
+            return response.text
+    
+    except aai.types.TranscriptError as e:
+        print(f"AssemblyAI transcription failed: {e}")
+        return "Transcription failed. Please try again later."
+    
+    except Exception as e:
+        print(f"Unexpected error during transcription: {e}")
+        return "Internal error during transcription."
 
 # Function to retrieve relevant data from ChromaDB
 def retrieve_relevant_data(query):
