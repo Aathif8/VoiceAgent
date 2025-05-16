@@ -33,8 +33,7 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     
     # Download the recorded audio from Twilio
     audio_response = requests.get(f"{RecordingUrl}.wav")
-    audio_bytes = io.BytesIO(audio_response.content)
-    audio_bytes.name = "recording.wav"
+    audio_bytes = audio_response.content
 
     transcribed_text = transcribe_audio(audio_bytes)
     context = retrieve_relevant_data(transcribed_text)
