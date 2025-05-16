@@ -30,14 +30,14 @@ def transcribe_audio(audio_bytes):
     try:
         audio_file = io.BytesIO(audio_bytes)
 
-        with tempfile.NamedTemporaryFile(suffix=".wav") as temp:
-            temp.write(audio_file)
+        with tempfile.NamedTemporaryFile(suffix=".wav", mode="wb") as temp:
+            temp.write(audio_file.read())
             temp.seek(0)
 
             config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
             
             response = aai.Transcriber(config=config).transcribe(temp)
-
+            print("Transcribed Audio successfully")
             return response.text
     
     except aai.types.TranscriptError as e:
