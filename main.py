@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from routes.upload import router as upload_router
 from routes.speech import router as speech_router
-from routes.ringcentral import router as ringcentral_router
+from routes.twilio import router as twilio_router
 
 # Load Environment variables
 load_dotenv()
@@ -28,8 +28,4 @@ app.add_middleware(
 
 app.include_router(upload_router, prefix="/api")
 app.include_router(speech_router, prefix="/api")
-app.include_router(ringcentral_router)
-
-# Serve static file IVR audio or bot response
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
+app.include_router(twilio_router, prefix="/api")
