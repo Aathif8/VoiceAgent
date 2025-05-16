@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Request, Form
+import io
+from fastapi import APIRouter, Form
 from fastapi.responses import Response
 from twilio.twiml.voice_response import VoiceResponse
 import requests
-from services.speech_service import transcribe_audio, retrieve_relevant_data, generate_response, generate_speech
+from services.speech_service import transcribe_audio, retrieve_relevant_data, generate_response
 
 router = APIRouter()
 
@@ -32,7 +33,8 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     
     # Download the recorded audio from Twilio
     audio_response = requests.get(f"{RecordingUrl}.wav")
-    audio_bytes = audio_response.content
+    audio_bytes = io.BytesIO(audio_response.content)
+    audio_bytes.name = "recording.wav"
 
     transcribed_text = transcribe_audio(audio_bytes)
     context = retrieve_relevant_data(transcribed_text)
