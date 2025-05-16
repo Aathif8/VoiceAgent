@@ -6,36 +6,43 @@ from services.speech_service import transcribe_audio, retrieve_relevant_data, ge
 
 router = APIRouter()
 
-# @router.post("/twilio/webhook")
-# async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str = Form(...)):
-
-#     if int(RecordingDuration) == 0:
-#         return Response(status_code=200)
-    
-#     # Download the recorded audio from Twilio
-#     recording_url = f"{RecordingUrl}.wav"
-#     audio_response = requests.get(recording_url)
-#     audio_bytes = audio_response.content
-
-#     transcribed_text = transcribe_audio(audio_bytes)
-    
-#     context = retrieve_relevant_data(transcribed_text)
-    
-#     prompt = f"Use the following context to answer the question:\n\nContext:\n{context}\n\nQuestion:\n{transcribed_text}\n\n"
-
-#     answer_text = generate_response(prompt)
-
-#     # response_audio_path = generate_speech(answer_text)
-
-#     # Response via Twilio
-#     response = VoiceResponse()
-#     response.say(answer_text)
-
-#     return Response(content=str(response), media_type="application/xml")
-
-
 @router.post("/twilio/webhook")
-async def twilio_webhook(request: Request):
-    form_data = await request.form()
-    print("Form received:", form_data)
-    return Response("OK")
+async def twilio_answer():
+    response = VoiceResponse()
+    response.say("Hello! You can ask about the Banking Information after the beep")
+    response.record(
+        action="/api/twilio/handle-recording",
+        method="POST",
+        max_length=10,
+        play_beep=True,
+        timeout=1
+    )
+    response.say("No input received. GoodBye.")
+    response.hangup()
+    return Response(content=str(response), media_type="application/xml")
+
+@router.post("/twilio/handle-recording")
+async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str = Form(...)):
+
+    if int(RecordingDuration) == 0:
+        response = VoiceResponse()
+        response.say("Sorry. I didn't hear anything. Please try again")
+        response.redirect("api/twilio/webhook")
+        return Response(content=str(response), media_type="application/xml")
+    
+    # Download the recorded audio from Twilio
+    audio_response = requests.get(f"{RecordingUrl}.wav")
+    audio_bytes = audio_response.content
+
+    transcribed_text = transcribe_audio(audio_bytes)
+    context = retrieve_relevant_data(transcribed_text)
+    prompt = f"Use the following context to answer the question:\n\nContext:\n{context}\n\nQuestion:\n{transcribed_text}\n\n"
+    answer_text = generate_response(prompt)
+
+    # response_audio_path = generate_speech(answer_text)
+
+    # Response via Twilio
+    response = VoiceResponse()
+    response.say(answer_text)
+    response.redirect("/api/twilio/webhook")
+    return Response(content=str(response), media_type="application/xml")
