@@ -36,7 +36,7 @@ def transcribe_audio(audio_bytes):
 
             config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
             
-            response = aai.Transcriber(config=config).transcribe(temp)
+            response = aai.Transcriber(config=config).transcribe(temp.name)
             print("Transcribed Audio successfully")
             return response.text
     
