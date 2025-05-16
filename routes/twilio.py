@@ -29,7 +29,7 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     if int(RecordingDuration) == 0:
         response = VoiceResponse()
         response.say("Sorry. I didn't hear anything. Please try again")
-        response.redirect("https://voiceagent-0wtp.onrender.comapi/twilio/webhook")
+        response.redirect("https://voiceagent-0wtp.onrender.comapi/api/twilio/webhook")
         return Response(content=str(response), media_type="application/xml")
     
     # Download the recorded audio from Twilio
