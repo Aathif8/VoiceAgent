@@ -12,7 +12,7 @@ async def twilio_answer():
     response = VoiceResponse()
     response.say("Hello! You can ask about the Banking Information after the beep")
     response.record(
-        action="/api/twilio/handle-recording",
+        action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording",
         method="POST",
         max_length=10,
         play_beep=True,
@@ -24,11 +24,12 @@ async def twilio_answer():
 
 @router.post("/twilio/handle-recording")
 async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str = Form(...)):
+    print("Recording handler hit")
 
     if int(RecordingDuration) == 0:
         response = VoiceResponse()
         response.say("Sorry. I didn't hear anything. Please try again")
-        response.redirect("api/twilio/webhook")
+        response.redirect("https://voiceagent-0wtp.onrender.comapi/twilio/webhook")
         return Response(content=str(response), media_type="application/xml")
     
     # Download the recorded audio from Twilio
@@ -45,5 +46,5 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     # Response via Twilio
     response = VoiceResponse()
     response.say(answer_text)
-    response.redirect("/api/twilio/webhook")
+    response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook")
     return Response(content=str(response), media_type="application/xml")
