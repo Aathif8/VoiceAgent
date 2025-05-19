@@ -26,7 +26,7 @@ HEADERS = {
     }
 
 # Functioon to transcribe audio
-def transcribe_audio(audio_bytes):
+def transcribe_audio(audio_bytes, recording_sid: str = None):
     try:
         audio_file = io.BytesIO(audio_bytes)
 
@@ -37,15 +37,15 @@ def transcribe_audio(audio_bytes):
             config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
             
             response = aai.Transcriber(config=config).transcribe(temp.name)
-            print("Transcribed Audio successfully")
+            print(f"[{recording_sid or 'No SID'}] Transcribed audio successfully")
             return response.text
     
     except aai.types.TranscriptError as e:
-        print(f"AssemblyAI transcription failed: {e}")
+        print(f"[{recording_sid or 'No SID'}] AssemblyAI transcription failed: {e}")
         return "Transcription failed. Please try again later."
     
     except Exception as e:
-        print(f"Unexpected error during transcription: {e}")
+        print(f"[{recording_sid or 'No SID'}] Unexpected error during transcription: {e}")
         return "Internal error during transcription."
 
 # Function to retrieve relevant data from ChromaDB
