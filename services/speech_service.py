@@ -28,22 +28,21 @@ HEADERS = {
 # Functioon to transcribe audio
 def transcribe_audio(audio_bytes, recording_sid: str = None):
     try:
-        audio_file = io.BytesIO(audio_bytes)
+        upload_url = aai.uplad(audio_bytes)
 
-        with tempfile.NamedTemporaryFile(suffix=".wav", mode="wb") as temp:
-            temp.write(audio_file.read())
-            temp.seek(0)
+        config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
 
-            config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
-            
-            response = aai.Transcriber(config=config).transcribe(temp.name)
-            print(f"[{recording_sid or 'No SID'}] Transcribed audio successfully")
-            return response.text
+        transcriber = aai.Transcriber(config=config)
+        transcript = transcriber.transcribe(upload_url)
+        print("Transcription Completed")
+
+        print(f"[{recording_sid or 'No SID'}] Transcribed audio successfully")
+        return transcript.text
     
     except aai.types.TranscriptError as e:
         print(f"[{recording_sid or 'No SID'}] AssemblyAI transcription failed: {e}")
         return "Transcription failed. Please try again later."
-    
+
     except Exception as e:
         print(f"[{recording_sid or 'No SID'}] Unexpected error during transcription: {e}")
         return "Internal error during transcription."

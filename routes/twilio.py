@@ -14,7 +14,7 @@ async def twilio_answer():
     response.record(
         action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording",
         method="POST",
-        max_length=40,
+        max_length=30,
         play_beep=True,
         timeout=5
     )
