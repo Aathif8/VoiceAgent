@@ -14,9 +14,9 @@ async def twilio_answer():
     response.record(
         action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording",
         method="POST",
-        max_length=10,
+        max_length=40,
         play_beep=True,
-        timeout=1
+        timeout=5
     )
     response.say("No input received. GoodBye.")
     response.hangup()
