@@ -73,6 +73,13 @@ def transcribe_audio(audio_bytes: bytes, recording_sid: str = None):
 
 # Function to retrieve relevant data from ChromaDB
 def retrieve_relevant_data(query):
+    if not query or not isinstance(query, str):
+        raise ValueError("Query must be a non-empty string.")
+    
+    query = query.strip()
+    if len(query) > 8192:  # max token limit for embeddings
+        query = query[:8192]
+        
     query_embedding_response = openai.embeddings.create(
         model="text-embedding-ada-002",
         input=[query]

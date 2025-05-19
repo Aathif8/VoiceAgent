@@ -44,7 +44,9 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     recording_url = fetch_recording(RecordingUrl)
 
     transcribed_text = transcribe_audio(recording_url, recording_sid=RecordingSid)
-    context = retrieve_relevant_data(transcribed_text)
+
+    context = retrieve_relevant_data(transcribed_text) if transcribed_text and "error" not in transcribed_text.lower() else "No transcription available."
+
     prompt = f"Use the following context to answer the question:\n\nContext:\n{context}\n\nQuestion:\n{transcribed_text}\n\n"
     answer_text = generate_response(prompt)
 
