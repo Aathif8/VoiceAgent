@@ -26,27 +26,40 @@ HEADERS = {
     }
 
 # Functioon to transcribe audio
-def transcribe_audio(audio_bytes, recording_sid: str = None):
+def transcribe_audio(recording_url, recording_sid: str = None):
     try:
-        upload_url = aai.uplad(audio_bytes)
+        # Fetch recording from Twilio
+        twilio_auth = (os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
+        response = requests.get(recording_url, auth=twilio_auth)
+
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch recording, status {response.status_code}")
+        
+        audio_bytes = response.content
+        if not audio_bytes:
+            raise Exception("Downloaded audio is empty")
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp:
+            temp.write(audio_bytes)
+            temp.flush()
+
+        # Check the file size
+        print(f"File size: {os.path.getsize(temp.name)} bytes")
 
         config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
-
         transcriber = aai.Transcriber(config=config)
-        transcript = transcriber.transcribe(upload_url)
-        print("Transcription Completed")
+        transcript = transcriber.transcribe(temp.name)
 
-        print(f"[{recording_sid or 'No SID'}] Transcribed audio successfully")
+        print(f"[{recording_sid}] Transcription succeeded")
         return transcript.text
     
     except aai.types.TranscriptError as e:
-        print(f"[{recording_sid or 'No SID'}] AssemblyAI transcription failed: {e}")
-        return "Transcription failed. Please try again later."
+        print(f"[{recording_sid}] AssemblyAI error: {e}")
+        return "Transcription failed due to processing error."
 
     except Exception as e:
-        print(f"[{recording_sid or 'No SID'}] Unexpected error during transcription: {e}")
+        print(f"[{recording_sid}] General error: {e}")
         return "Internal error during transcription."
-
 # Function to retrieve relevant data from ChromaDB
 def retrieve_relevant_data(query):
     query_embedding_response = openai.embeddings.create(
