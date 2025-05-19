@@ -33,9 +33,9 @@ TWILIO_AUTH = (Twilio_ACCOUNT_SID, Twilio_AUTH_TOKEN)
 # Function to get audio file from Twilio
 def fetch_recording(url, retries=3, delay=2):
     for attempt in range(retries):
-        url = requests.get(url, auth=TWILIO_AUTH)
-        if url.status_code == 200:
-            return url.content
+        response = requests.get(url, auth=TWILIO_AUTH)
+        if response.status_code == 200:
+            return response.content
         else:
             print(f"Attempt {attempt + 1} failed, retrying in {delay} seconds...")
             time.sleep(delay)
