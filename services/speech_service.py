@@ -25,12 +25,14 @@ HEADERS = {
     "Content-Type": "application/json"
     }
 
+# Initialize Twilio
+Twilio_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+Twilio_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_AUTH = (Twilio_ACCOUNT_SID, Twilio_AUTH_TOKEN)
 # Functioon to transcribe audio
 def transcribe_audio(recording_url, recording_sid: str = None):
     try:
-        # Fetch recording from Twilio
-        twilio_auth = (os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
-        response = requests.get(recording_url, auth=twilio_auth)
+        response = requests.get(recording_url, auth=TWILIO_AUTH)
 
         if response.status_code != 200:
             raise Exception(f"Failed to fetch recording, status {response.status_code}")
@@ -60,6 +62,8 @@ def transcribe_audio(recording_url, recording_sid: str = None):
     except Exception as e:
         print(f"[{recording_sid}] General error: {e}")
         return "Internal error during transcription."
+    
+
 # Function to retrieve relevant data from ChromaDB
 def retrieve_relevant_data(query):
     query_embedding_response = openai.embeddings.create(

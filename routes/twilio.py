@@ -16,7 +16,7 @@ async def twilio_answer():
         method="POST",
         max_length=30,
         play_beep=True,
-        timeout=5
+        timeout=3
     )
     response.say("No input received. GoodBye.")
     response.hangup()
@@ -36,12 +36,8 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
         response.say("Sorry. I didn't hear anything. Please try again")
         response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook")
         return Response(content=str(response), media_type="application/xml")
-    
-    # Download the recorded audio from Twilio
-    audio_response = requests.get(RecordingUrl)
-    audio_bytes = audio_response.content
 
-    transcribed_text = transcribe_audio(audio_bytes, recording_sid=RecordingSid)
+    transcribed_text = transcribe_audio(RecordingUrl, recording_sid=RecordingSid)
     context = retrieve_relevant_data(transcribed_text)
     prompt = f"Use the following context to answer the question:\n\nContext:\n{context}\n\nQuestion:\n{transcribed_text}\n\n"
     answer_text = generate_response(prompt)

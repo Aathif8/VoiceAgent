@@ -4,7 +4,6 @@ import openai
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from routes.upload import router as upload_router
 from routes.speech import router as speech_router
 from routes.twilio import router as twilio_router
