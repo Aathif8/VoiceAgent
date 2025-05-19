@@ -3,7 +3,7 @@ from fastapi import APIRouter, Form
 from fastapi.responses import Response
 from twilio.twiml.voice_response import VoiceResponse
 import requests
-from services.speech_service import transcribe_audio, retrieve_relevant_data, generate_response
+from services.speech_service import transcribe_audio, retrieve_relevant_data, generate_response, fetch_recording
 
 router = APIRouter()
 
@@ -36,8 +36,11 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
         response.say("Sorry. I didn't hear anything. Please try again")
         response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook")
         return Response(content=str(response), media_type="application/xml")
+    
+    # Fetch the audio file from the URL
+    recording_url = fetch_recording(RecordingUrl)
 
-    transcribed_text = transcribe_audio(RecordingUrl, recording_sid=RecordingSid)
+    transcribed_text = transcribe_audio(recording_url, recording_sid=RecordingSid)
     context = retrieve_relevant_data(transcribed_text)
     prompt = f"Use the following context to answer the question:\n\nContext:\n{context}\n\nQuestion:\n{transcribed_text}\n\n"
     answer_text = generate_response(prompt)

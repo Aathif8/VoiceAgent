@@ -1,5 +1,5 @@
 import openai
-import io
+import time
 import os
 import requests
 import json
@@ -29,15 +29,22 @@ HEADERS = {
 Twilio_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 Twilio_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_AUTH = (Twilio_ACCOUNT_SID, Twilio_AUTH_TOKEN)
-# Functioon to transcribe audio
-def transcribe_audio(recording_url, recording_sid: str = None):
-    try:
-        response = requests.get(recording_url, auth=TWILIO_AUTH)
 
-        if response.status_code != 200:
-            raise Exception(f"Failed to fetch recording, status {response.status_code}")
-        
-        audio_bytes = response.content
+# Function to get audio file from Twilio
+def fetch_recording(url, retries=3, delay=2):
+    for attempt in range(retries):
+        url = requests.get(url, auth=TWILIO_AUTH)
+        if url.status_code == 200:
+            return url.content
+        else:
+            print(f"Attempt {attempt + 1} failed, retrying in {delay} seconds...")
+            time.sleep(delay)
+    raise Exception(f"Failed to fetch recording after {retries} attempts")
+
+
+# Function to transcribe audio
+def transcribe_audio(audio_bytes: bytes, recording_sid: str = None):
+    try:
         if not audio_bytes:
             raise Exception("Downloaded audio is empty")
         
