@@ -1,22 +1,25 @@
-import io
-from fastapi import APIRouter, Form
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import Response
 from twilio.twiml.voice_response import VoiceResponse
-import requests
 from services.speech_service import transcribe_audio, retrieve_relevant_data, generate_response, fetch_recording
 
 router = APIRouter()
 
 @router.post("/twilio/webhook")
-async def twilio_answer():
+async def twilio_answer(request: Request):
+    followup = request.query_params.get("followup") == "true"
+
     response = VoiceResponse()
-    response.say("Hello! You can ask about the Banking Information after the beep")
+
+    if not followup:
+        response.say("Hello! You can ask about the Banking Information after the beep")
+
     response.record(
         action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording",
         method="POST",
         max_length=30,
         play_beep=True,
-        timeout=3
+        timeout=2
     )
     response.say("No input received. GoodBye.")
     response.hangup()
@@ -50,5 +53,5 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     # Response via Twilio
     response = VoiceResponse()
     response.say(answer_text)
-    # response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook")
+    response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook?followup=true")
     return Response(content=str(response), media_type="application/xml")
