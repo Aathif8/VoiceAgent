@@ -32,6 +32,12 @@ def extract_from_file(file_bytes, filename):
 
 # Function to stroe extracted text in chromaDB
 def store_data_in_chroma(text, source):
+    existing_ids = collection.get(include=[])["ids"]
+
+    if source in existing_ids:
+        print(f"Skipping {source} as it already exists in the database.")
+        return
+    
     response = openai.embeddings.create(
         model="text-embedding-ada-002",
         input=[text]
@@ -44,6 +50,8 @@ def store_data_in_chroma(text, source):
         embeddings=[embedding],
         ids=[source]
     )
+
+    print(f"Stored {source} in ChromaDB.")
 
 def get_chroma_collections():
     return collection
