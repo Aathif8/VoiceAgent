@@ -2,6 +2,8 @@ fastapi
 uvicorn
 openai
 python-dotenv
+pymupdf
+python-docx
 python-multipart
 assemblyai
 twilio
