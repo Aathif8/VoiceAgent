@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.upload import router as upload_router
 from routes.speech import router as speech_router
 from routes.twilio import router as twilio_router
+from services.data_loader import load_file
 
 # Load Environment variables
 load_dotenv()
@@ -25,6 +26,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(upload_router, prefix="/api")
+@app.on_event("startup")
+def startup_event():
+    load_file()
+
+# app.include_router(upload_router, prefix="/api")
 app.include_router(speech_router, prefix="/api")
 app.include_router(twilio_router, prefix="/api")
