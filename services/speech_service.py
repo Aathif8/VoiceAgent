@@ -189,24 +189,43 @@ def generate_response(conversation:list):
     {chr(10).join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in conversation])}
     Your response:
     """
-    
-    response = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        headers=HEADERS,
-        data=json.dumps({
-            "model": "meta-llama/llama-4-maverick:free",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-        })
-    )
 
-    if response.status_code == 200:
-        result = response.json()
+    # OpenRouter API call
+    # response = requests.post(
+    #     "https://openrouter.ai/api/v1/chat/completions",
+    #     headers=HEADERS,
+    #     data=json.dumps({
+    #         "model": "meta-llama/llama-4-maverick:free",
+    #         "messages": [
+    #             {
+    #                 "role": "user",
+    #                 "content": prompt
+    #             }
+    #         ],
+    #     })
+    # )
+
+    # if response.status_code == 200:
+    #     result = response.json()
+    #     print("Response Generated Successfully")
+    #     return result["choices"][0]["message"]["content"] if result else "No response from model."
+    # else:
+    #     return f"Error: {response.status_code} - {response.text}"
+
+    # OpenAI API call
+    try: 
+        completion = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=1500,
+            n=1,
+            stop=None
+        )
         print("Response Generated Successfully")
-        return result["choices"][0]["message"]["content"] if result else "No response from model."
-    else:
-        return f"Error: {response.status_code} - {response.text}"
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error generating response: {e}")
+        return "I'm sorry, but I couldn't process your request at the moment."
