@@ -34,7 +34,7 @@ async def twilio_answer(request: Request):
 
     print("Returning TwiML for initial webhook:")
     print(str(response))
-    
+
     return Response(content=str(response), media_type="application/xml")
 
 @router.post("/twilio/handle-recording")
@@ -82,6 +82,18 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
         if not isinstance(assistant_response, str):
             assistant_response = str(assistant_response)
         response.say(html.escape(assistant_response))
+
+        # Prompt user to respond again
+        response.record(
+            action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording?followup=true",
+            method="POST",
+            max_length=30,
+            play_beep=True,
+            timeout=4,
+            trim="trim-silence"
+        )
+        response.say("No input received. Goodbye.")
+        response.hangup()
 
         # Normalize user inputs
         normalized_date = normalize_date(extracted_info.get("date"))
