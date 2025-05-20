@@ -21,7 +21,7 @@ async def twilio_answer(request: Request):
         method="POST",
         max_length=30,
         play_beep=True,
-        timeout=1
+        timeout=5
     )
     response.say("No input received. GoodBye.")
     response.hangup()
