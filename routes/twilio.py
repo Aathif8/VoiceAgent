@@ -5,6 +5,8 @@ from services.speech_service import transcribe_audio, retrieve_relevant_data, ge
 
 router = APIRouter()
 
+conversation_memory = {}
+
 @router.post("/twilio/webhook")
 async def twilio_answer(request: Request):
     followup = request.query_params.get("followup") == "true"
@@ -12,7 +14,7 @@ async def twilio_answer(request: Request):
     response = VoiceResponse()
 
     if not followup:
-        response.say("Hello! You can ask about the Banking Information after the beep")
+        response.say("Hello! I am an Clinic Assistant.Please ask your queries after the beep")
 
     response.record(
         action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording",
@@ -29,13 +31,15 @@ async def twilio_answer(request: Request):
 async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str = Form(...), RecordingSid: str = Form(...)):
     print("Recording handler hit")
     print(f"Recording URL: {RecordingUrl}")
+
     try:
         duration = int(RecordingDuration)
     except (ValueError, TypeError):
         duration = 0
 
+    response = VoiceResponse()
+
     if duration == 0:
-        response = VoiceResponse()
         response.say("Sorry. I didn't hear anything. Please try again")
         response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook")
         return Response(content=str(response), media_type="application/xml")
@@ -44,16 +48,29 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     recording_url = fetch_recording(RecordingUrl)
 
     transcribed_text = transcribe_audio(recording_url, recording_sid=RecordingSid)
+    print(f"Transcribed text: {transcribed_text}")
 
-    context = retrieve_relevant_data(transcribed_text) if transcribed_text and "error" not in transcribed_text.lower() else "No transcription available."
+    if not transcribed_text or "error" in transcribed_text.lower():
+        transcribed_text = "Sorry, I couldn't understand what you trying to say. Please try again."
+        response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook?followup=true")
+        return Response(content=str(response), media_type="application/xml")
 
-    prompt = f"Use the following context to answer the question:\n\nContext:\n{context}\n\nQuestion:\n{transcribed_text}\n\n"
-    answer_text = generate_response(prompt)
+    # Get or initialize conversation memory
+    conversation = conversation_memory.get(RecordingSid, [])
+    conversation.append({"role": "user", "content": transcribed_text})
 
-    # response_audio_path = generate_speech(answer_text)
+    assistant_response = generate_response(conversation)
+
+    conversation.append({"role": "assistant", "content": assistant_response})
+
+    conversation_memory[RecordingSid] = conversation
 
     # Response via Twilio
-    response = VoiceResponse()
-    response.say(answer_text)
-    response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook?followup=true")
+    response.say(assistant_response)
+
+    if "confirmed" in assistant_response.lower() or "your appointment is confirmed" in assistant_response.lower():
+        response.say("Thank you for confirming. Goodbye.")
+        response.hangup()
+    else:
+        response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook?followup=true")
     return Response(content=str(response), media_type="application/xml")
