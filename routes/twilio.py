@@ -14,14 +14,14 @@ async def twilio_answer(request: Request):
     response = VoiceResponse()
 
     if not followup:
-        response.say("Hello! I am an Clinic Assistant.Please ask your queries after the beep")
+        response.say("Hello! I am an Clinic Assistant at ABC Hospital. Please ask your queries after the beep")
 
     response.record(
         action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording",
         method="POST",
         max_length=30,
         play_beep=True,
-        timeout=2
+        timeout=1
     )
     response.say("No input received. GoodBye.")
     response.hangup()
@@ -48,7 +48,6 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     recording_url = fetch_recording(RecordingUrl)
 
     transcribed_text = transcribe_audio(recording_url, recording_sid=RecordingSid)
-    print(f"Transcribed text: {transcribed_text}")
 
     if not transcribed_text or "error" in transcribed_text.lower():
         transcribed_text = "Sorry, I couldn't understand what you trying to say. Please try again."
@@ -58,6 +57,7 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
     # Get or initialize conversation memory
     conversation = conversation_memory.get(RecordingSid, [])
     conversation.append({"role": "user", "content": transcribed_text})
+    print(f"Transcribed text: {transcribed_text}")
 
     assistant_response = generate_response(conversation)
 

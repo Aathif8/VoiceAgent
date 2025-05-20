@@ -119,7 +119,7 @@ def generate_response(conversation:list):
     current_time = datetime.now().strftime("%A, %d %B %Y at %I:%M %p")
 
     prompt = f"""
-    You are a friendly healthcare assistant at ABC Hospital. Help the user book an appointment.
+    You are a friendly healthcare assistant at ABC Hospital. The user has already been greeted, so do not introduce yourself again. Just continue the conversation professionally and help them book an appointment.
 
     Today's date is and time is: {current_time}
     
