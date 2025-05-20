@@ -96,6 +96,24 @@ def retrieve_relevant_data(query):
     print("Relevant Data Extracted")
     return relevant_texts
 
+
+# Function to generate speech from text
+def generate_speech(text):
+    response = openai.audio.speech.create(
+        model="tts-1",
+        voice="alloy",
+        input=text
+    )
+    print("Converted to Audio from response")
+
+    # Save to temporary file
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    temp_file.write(response.content)
+    temp_file.close()
+    
+    return temp_file.name
+
+
 # Function to generate response
 def generate_response(conversation:list):
     current_time = datetime.now().strftime("%A, %d %B %Y at %I:%M %p")
