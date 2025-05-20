@@ -100,7 +100,7 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
         normalized_time = normalize_time(extracted_info.get("time"))
 
         if extracted_info["name"] and normalized_date and normalized_time:
-            success = add_appointment({
+            status = add_appointment({
                 "NAME": extracted_info["name"],
                 "DATE": normalized_date,
                 "TIME": normalized_time,
@@ -110,15 +110,18 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
                 "CONTACT": extracted_info.get("contact_number") or ""
             })
 
-            if success:
+            if status == "success":
                 response.say("Your appointment has been successfully booked.")
                 response.say("Thank you and goodbye.")
                 conversation_memory.pop(CallSid, None)
                 response.hangup()
                 print("Appointment booked and call ended.")
                 return Response(content=str(response), media_type="application/xml")
-            else:
-                response.say("That slot is already taken or a duplicate entry was found. Please choose another date or time.")
+            elif status == "duplicate":
+                response.say("You already have an appointment at this date and time. Please try a different slot.")
+
+            elif status == "slot_taken":
+                response.say("That appointment slot is already taken. Please choose another time.")
 
             # Add this check right after the booking block
             end_phrases = ["thank you", "that's all", "no thanks", "bye", "i'm done", "nothing else"]
