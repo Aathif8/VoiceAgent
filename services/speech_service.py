@@ -227,7 +227,7 @@ def generate_response(conversation:list):
             stop=None
         )
         print("Response Generated Successfully")
-        return completion.choices[0].message.content.strip()
+        return completion.choices[0].message.content.strip(), extracted_user_info
     except Exception as e:
         print(f"Error generating response: {e}")
         return "I'm sorry, but I couldn't process your request at the moment."
