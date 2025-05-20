@@ -81,7 +81,7 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
         # Ensure response is a safe XML string
         if not isinstance(assistant_response, str):
             assistant_response = str(assistant_response)
-        response.say(html.escape(assistant_response))
+        response.say(assistant_response)
 
         # Prompt user to respond again
         response.record(
@@ -119,6 +119,14 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
                 return Response(content=str(response), media_type="application/xml")
             else:
                 response.say("That slot is already taken or a duplicate entry was found. Please choose another date or time.")
+
+            # Add this check right after the booking block
+            end_phrases = ["thank you", "that's all", "no thanks", "bye", "i'm done", "nothing else"]
+            if any(phrase in transcribed_text.lower() for phrase in end_phrases):
+                response.say("You're welcome. Have a great day!")
+                response.hangup()
+                print("User said goodbye, call ended.")
+                return Response(content=str(response), media_type="application/xml")
     
     except Exception as e:
         print(f"Unhandled error: {e}")
