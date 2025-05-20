@@ -4,6 +4,7 @@ from twilio.twiml.voice_response import VoiceResponse
 from services.speech_service import transcribe_audio, generate_response, fetch_recording
 from services.data_loader import add_appointment, normalize_date, normalize_time
 from typing import Dict, List
+import html
 
 router = APIRouter()
 
@@ -25,18 +26,23 @@ async def twilio_answer(request: Request):
         method="POST",
         max_length=30,
         play_beep=True,
-        timeout=4
+        timeout=4,
+        trim="trim-silence"
     )
     response.say("No input received. GoodBye.")
     response.hangup()
+
+    print("Returning TwiML for initial webhook:")
+    print(str(response))
+    
     return Response(content=str(response), media_type="application/xml")
 
 @router.post("/twilio/handle-recording")
 async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str = Form(...), RecordingSid: str = Form(...), From: str = Form(...), CallSid: str = Form(...)):
     print("Recording handler hit")
     print(f"Recording URL: {RecordingUrl}")
-
     print(f"Caller: {From}")
+
     if CallSid not in conversation_memory:
         conversation_memory[CallSid] = []
 
@@ -52,50 +58,60 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
         response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook")
         return Response(content=str(response), media_type="application/xml")
     
-    # Fetch the audio file from the URL
-    recording_url = fetch_recording(RecordingUrl)
+    try:
+        # Fetch the audio file from the URL
+        audio_data = fetch_recording(RecordingUrl)
 
-    transcribed_text = transcribe_audio(recording_url, recording_sid=RecordingSid)
+        transcribed_text = transcribe_audio(audio_data, recording_sid=RecordingSid)
 
-
-
-    if not transcribed_text or "error" in transcribed_text.lower():
-        transcribed_text = "Sorry, I couldn't understand what you trying to say. Please try again."
-        response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook?followup=true")
-        return Response(content=str(response), media_type="application/xml")
-
-    # Add to memory
-    conversation_memory[CallSid].append({"role": "user", "content": transcribed_text})
-
-    # Generate Assistant response using OpenAI
-    assistant_response, extracted_info = generate_response(conversation_memory[CallSid])
-    print("Extracted Info:", extracted_info)
-
-    conversation_memory[CallSid].append({"role": "assistant", "content": assistant_response})
-
-    # Response via Twilio
-    response.say(assistant_response)
-
-    # Normalize user inputs
-    normalized_date = normalize_date(extracted_info.get("date"))
-    normalized_time = normalize_time(extracted_info.get("time"))
-
-    if extracted_info["name"] and normalized_date and normalized_time:
-        success = add_appointment({
-            "NAME": extracted_info["name"],
-            "DATE": normalized_date,
-            "TIME": normalized_time,
-            "DEPARTMENT": extracted_info.get("department") or "",
-            "REASON": extracted_info.get("reason") or "",
-            "REQUIREMENTS": extracted_info.get("requirements") or "",
-            "CONTACT": extracted_info.get("contact_number") or ""
-        })
-
-        if success:
-            response.say("Your appointment has been successfully booked.")
-            response.say("Thank you and goodbye.")
-            conversation_memory.pop(CallSid, None)
-            response.hangup()
+        if not transcribed_text or "error" in transcribed_text.lower():
+            response.say("Sorry, I couldn't understand what you trying to say. Please try again.")
+            response.redirect("https://voiceagent-0wtp.onrender.com/api/twilio/webhook?followup=true")
             return Response(content=str(response), media_type="application/xml")
-        else:
-            response.say("That slot is already taken or a duplicate entry was found. Please choose another date or time.")
+
+        # update conversation memory
+        conversation_memory[CallSid].append({"role": "user", "content": transcribed_text})
+
+        # Generate Assistant response using OpenAI
+        assistant_response, extracted_info = generate_response(conversation_memory[CallSid])
+        print("Extracted Info:", extracted_info)
+
+        conversation_memory[CallSid].append({"role": "assistant", "content": assistant_response})
+
+        # Ensure response is a safe XML string
+        if not isinstance(assistant_response, str):
+            assistant_response = str(assistant_response)
+        response.say(html.escape(assistant_response))
+
+        # Normalize user inputs
+        normalized_date = normalize_date(extracted_info.get("date"))
+        normalized_time = normalize_time(extracted_info.get("time"))
+
+        if extracted_info["name"] and normalized_date and normalized_time:
+            success = add_appointment({
+                "NAME": extracted_info["name"],
+                "DATE": normalized_date,
+                "TIME": normalized_time,
+                "DEPARTMENT": extracted_info.get("department") or "",
+                "REASON": extracted_info.get("reason") or "",
+                "REQUIREMENTS": extracted_info.get("requirements") or "",
+                "CONTACT": extracted_info.get("contact_number") or ""
+            })
+
+            if success:
+                response.say("Your appointment has been successfully booked.")
+                response.say("Thank you and goodbye.")
+                conversation_memory.pop(CallSid, None)
+                response.hangup()
+                print("Appointment booked and call ended.")
+                return Response(content=str(response), media_type="application/xml")
+            else:
+                response.say("That slot is already taken or a duplicate entry was found. Please choose another date or time.")
+    
+    except Exception as e:
+        print(f"Unhandled error: {e}")
+        response.say("Sorry, Something went wrong. Please try again later.")
+
+    # Always return a valid TwiML response
+    print("Twilio response:", str(response))
+    return Response(content=str(response), media_type="application/xml")
