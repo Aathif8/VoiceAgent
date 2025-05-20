@@ -2,7 +2,6 @@ import openai
 import time
 import os
 import requests
-import json
 import re
 from services.upload_service import get_chroma_collections
 from fastapi import APIRouter
@@ -10,6 +9,7 @@ from dotenv import load_dotenv
 import assemblyai as aai
 import tempfile
 from datetime import datetime
+from openai import OpenAI
 
 router = APIRouter()
 
@@ -31,6 +31,8 @@ HEADERS = {
 Twilio_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 Twilio_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_AUTH = (Twilio_ACCOUNT_SID, Twilio_AUTH_TOKEN)
+
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Function to get audio file from Twilio
 def fetch_recording(url, retries=3, delay=2):
@@ -135,14 +137,14 @@ def generate_response(conversation:list):
             content = message["content"].lower()
             # Extracting user name
             if not extracted_user_info["name"] and "my name is" in content:
-                extracted_user_info["name"] = content.split("my name is")[-1].strip()[0]
+                extracted_user_info["name"] = content.split("my name is")[-1].strip().split(" ")[0].capitalize()
             # Extracting appointment date
             if not extracted_user_info["date"] and any(month in content for month in ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "today", "tomorrow"]):
                 extracted_user_info["date"] = content
             
             # Extracting appointment time
             if not extracted_user_info['time']:
-                time_match = re.search(r'\b\d{1,2}:\d{2}\s*[ap]m\b', content)
+                time_match = re.search(r'\b\d{1,2}(:\d{2})?\s*[ap]m\b', content)
                 if time_match:
                     extracted_user_info['time'] = time_match.group()
             
@@ -214,7 +216,7 @@ def generate_response(conversation:list):
 
     # OpenAI API call
     try: 
-        completion = openai.ChatCompletion.create(
+        completion = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "user", "content": prompt}
