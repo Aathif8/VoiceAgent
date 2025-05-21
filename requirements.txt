@@ -2,11 +2,8 @@ fastapi
 uvicorn
 openai
 python-dotenv
-pymupdf
-python-docx
-chromadb
 python-multipart
 assemblyai
 twilio
-pandas
 openpyxl
+websockets

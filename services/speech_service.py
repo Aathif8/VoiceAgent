@@ -3,7 +3,8 @@ import time
 import os
 import requests
 import re
-from services.upload_service import get_chroma_collections
+import wave
+import numpy as np
 from fastapi import APIRouter
 from dotenv import load_dotenv
 import assemblyai as aai
@@ -45,6 +46,27 @@ def fetch_recording(url, retries=3, delay=2):
             time.sleep(delay)
     raise Exception(f"Failed to fetch recording after {retries} attempts")
 
+# Function to convert mu-law audio to PCM
+def mulaw_decode(byte):
+    MULAW_MAX = 0x1FFF
+    BIAS = 0x84
+
+    byte = ~byte & 0xFF
+    exponent = (byte >> 4) & 0x07
+    mantissa = byte & 0x0F
+    sample = ((mantissa << 4) + 0x08) << exponent
+    return (sample - BIAS) if (byte & 0x80) else -(sample - BIAS)
+
+def mulaw_to_pcm_numpy(mulaw_bytes: bytes):
+    decoded = np.array([mulaw_decode(b) for b in mulaw_bytes], dtype=np.int16)
+    return decoded.tobytes()
+
+def save_pcm_as_wav(pcm_data: bytes, path: str):
+    with wave.open(path, 'wb') as wav_file:
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)  # 16-bit
+        wav_file.setframerate(8000)  # Twilio format
+        wav_file.writeframes(pcm_data)
 
 # Function to transcribe audio
 def transcribe_audio(audio_bytes: bytes, recording_sid: str = None):
@@ -52,8 +74,11 @@ def transcribe_audio(audio_bytes: bytes, recording_sid: str = None):
         if not audio_bytes:
             raise Exception("Downloaded audio is empty")
         
+        # Convert µ-law to PCM
+        pcm_data = mulaw_to_pcm_numpy(audio_bytes)
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp:
-            temp.write(audio_bytes)
+            save_pcm_as_wav(pcm_data, temp.name)
             temp.flush()
 
         # Check the file size
@@ -73,49 +98,6 @@ def transcribe_audio(audio_bytes: bytes, recording_sid: str = None):
     except Exception as e:
         print(f"[{recording_sid}] General error: {e}")
         return "Internal error during transcription."
-    
-
-# Function to retrieve relevant data from ChromaDB
-def retrieve_relevant_data(query):
-    if not query or not isinstance(query, str):
-        raise ValueError("Query must be a non-empty string.")
-    
-    query = query.strip()
-    if len(query) > 8192:  # max token limit for embeddings
-        query = query[:8192]
-        
-    query_embedding_response = openai.embeddings.create(
-        model="text-embedding-ada-002",
-        input=[query]
-    )
-    query_embedding = query_embedding_response.data[0].embedding
-
-    results = get_chroma_collections().query(
-        query_embeddings=[query_embedding],
-        n_results=3
-    )
-
-    relevant_texts = " ".join(results["documents"][0] if results["documents"] else "No relevant data found")
-    print("Relevant Data Extracted")
-    return relevant_texts
-
-
-# Function to generate speech from text
-def generate_speech(text):
-    response = openai.audio.speech.create(
-        model="tts-1",
-        voice="alloy",
-        input=text
-    )
-    print("Converted to Audio from response")
-
-    # Save to temporary file
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    temp_file.write(response.content)
-    temp_file.close()
-    
-    return temp_file.name
-
 
 # Function to generate response
 def generate_response(conversation:list):
