@@ -35,7 +35,7 @@ TWILIO_AUTH = (Twilio_ACCOUNT_SID, Twilio_AUTH_TOKEN)
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Function to get audio file from Twilio
-def fetch_recording(url, retries=3, delay=1):
+def fetch_recording(url, retries=3, delay=2):
     for attempt in range(retries):
         response = requests.get(url, auth=TWILIO_AUTH)
         if response.status_code == 200:
