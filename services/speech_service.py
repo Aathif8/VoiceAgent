@@ -168,7 +168,7 @@ def generate_response(conversation:list):
     print(f"Extracted User Info: {extracted_user_info}")
     
     prompt = f"""
-    You are a friendly healthcare assistant at ABC Hospital. The user has already been greeted, so do not introduce yourself again. Just continue the conversation professionally and help them book an appointment.
+    You are a friendly appointment assistant at Healthcare Hospital. The user has already been greeted, so do not introduce yourself again. Just continue the conversation professionally and help them book an appointment.
 
     Today's date is and time is: {current_time}
     
