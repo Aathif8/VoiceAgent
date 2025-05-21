@@ -19,14 +19,14 @@ async def twilio_answer(request: Request):
     response = VoiceResponse()
 
     if not followup:
-        response.say("Hello! I am an Clinic Assistant at ABC Hospital. Please ask your queries after the beep")
+        response.say("Hello! Welcome to Healthcare Hospital You’re speaking with our appointment assistant How can I help you today?")
 
     response.record(
         action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording",
         method="POST",
-        max_length=30,
-        play_beep=True,
-        timeout=4,
+        max_length=15,
+        play_beep=False,
+        timeout=3,
         trim="trim-silence"
     )
     response.say("No input received. GoodBye.")
@@ -87,9 +87,9 @@ async def twilio_webhook(RecordingUrl: str = Form(...), RecordingDuration: str =
         response.record(
             action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording?followup=true",
             method="POST",
-            max_length=30,
-            play_beep=True,
-            timeout=4,
+            max_length=15,
+            play_beep=False,
+            timeout=3,
             trim="trim-silence"
         )
         response.say("No input received. Goodbye.")

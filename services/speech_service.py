@@ -59,7 +59,7 @@ def transcribe_audio(audio_bytes: bytes, recording_sid: str = None):
         # Check the file size
         print(f"File size: {os.path.getsize(temp.name)} bytes")
 
-        config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
+        config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.slam_1)
         transcriber = aai.Transcriber(config=config)
         transcript = transcriber.transcribe(temp.name)
 
@@ -168,7 +168,7 @@ def generate_response(conversation:list):
     print(f"Extracted User Info: {extracted_user_info}")
     
     prompt = f"""
-    You are a friendly healthcare assistant at ABC Hospital. The user has already been greeted, so do not introduce yourself again. Just continue the conversation professionally and help them book an appointment.
+    You are a friendly appointment assistant at Healthcare Hospital. The user has already been greeted, so do not introduce yourself again. Just continue the conversation professionally and help them book an appointment.
 
     Today's date is and time is: {current_time}
     
@@ -217,14 +217,12 @@ def generate_response(conversation:list):
     # OpenAI API call
     try: 
         completion = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
-            max_tokens=1500,
-            n=1,
-            stop=None
+            max_tokens=300,
         )
         print("Response Generated Successfully")
         return completion.choices[0].message.content.strip(), extracted_user_info
