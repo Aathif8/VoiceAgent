@@ -19,7 +19,7 @@ async def twilio_answer(request: Request):
     response = VoiceResponse()
 
     if not followup:
-        response.say("Hello! Welcome to Healthcare Hospital.You’re speaking with our appointment assistant.How can I help you today?")
+        response.say("Hello! Welcome to Healthcare Hospital You’re speaking with our appointment assistant How can I help you today?")
 
     response.record(
         action="https://voiceagent-0wtp.onrender.com/api/twilio/handle-recording",
