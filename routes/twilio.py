@@ -4,7 +4,7 @@ from twilio.twiml.voice_response import VoiceResponse
 from services.speech_service import transcribe_audio, generate_response, fetch_recording
 from services.data_loader import add_appointment, normalize_date, normalize_time
 from typing import Dict, List
-import html
+import time
 
 router = APIRouter()
 
@@ -19,6 +19,7 @@ async def twilio_answer(request: Request):
     response = VoiceResponse()
 
     if not followup:
+        time.sleep(2)
         response.say("Hello! Welcome to Healthcare Hospital You’re speaking with our appointment assistant How can I help you today?")
 
     response.record(
