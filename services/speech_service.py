@@ -35,7 +35,7 @@ TWILIO_AUTH = (Twilio_ACCOUNT_SID, Twilio_AUTH_TOKEN)
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Function to get audio file from Twilio
-def fetch_recording(url, retries=3, delay=2):
+def fetch_recording(url, retries=3, delay=1):
     for attempt in range(retries):
         response = requests.get(url, auth=TWILIO_AUTH)
         if response.status_code == 200:
@@ -59,7 +59,7 @@ def transcribe_audio(audio_bytes: bytes, recording_sid: str = None):
         # Check the file size
         print(f"File size: {os.path.getsize(temp.name)} bytes")
 
-        config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.best)
+        config = aai.TranscriptionConfig(speech_model=aai.SpeechModel.slam_1)
         transcriber = aai.Transcriber(config=config)
         transcript = transcriber.transcribe(temp.name)
 
@@ -217,14 +217,12 @@ def generate_response(conversation:list):
     # OpenAI API call
     try: 
         completion = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
-            max_tokens=1500,
-            n=1,
-            stop=None
+            max_tokens=300,
         )
         print("Response Generated Successfully")
         return completion.choices[0].message.content.strip(), extracted_user_info
