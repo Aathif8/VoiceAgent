@@ -46,7 +46,7 @@ LOG_EVENT_TYPES = [
 ]
 
 headers = {
-    "Authorization": f"Bearer {OPENAI_API_KEY}",
+    "api-key": OPENAI_API_KEY,
     "OpenAI-Beta": "realtime=v1"
 }
 
