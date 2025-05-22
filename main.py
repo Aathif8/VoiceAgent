@@ -119,7 +119,7 @@ async def handle_media_stream(websocket: WebSocket):
                         print(f"Session updated successfully:",response)
                     if stream_sid and response['type'] == 'response.audio.delta' and response.get('delta'):
                         try:
-                            audio_payload = base64.b64encode(base64.b64decode(response['delta'])).decode('utf-8')
+                            audio_payload = response['delta']
                             audio_delta = {
                                 "event": "media",
                                 "streamSid": stream_sid,
