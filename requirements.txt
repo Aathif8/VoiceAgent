@@ -8,3 +8,4 @@ twilio
 openpyxl
 websockets
 numpy
+pandas
