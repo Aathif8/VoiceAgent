@@ -16,6 +16,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PORT = os.getenv("PORT", 8000)
 BASE_URL = "voiceagent-0wtp.onrender.com"
 
+headers = {"api-key": OPENAI_API_KEY}
 current_time = datetime.now().strftime("%A, %d %B %Y at %I:%M %p")
 
 SYSTEM_MESSAGE = f"""
@@ -72,7 +73,7 @@ async def handle_media_stream(websocket: WebSocket):
 
     async with websockets.connect(
        'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01',
-       extra_headers=[("Authorization", f"Bearer {OPENAI_API_KEY}")],
+       extra_headers=headers,
     ) as openai_ws:
         await send_session_update(openai_ws)
         stream_sid = None
