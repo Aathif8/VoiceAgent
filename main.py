@@ -3,7 +3,7 @@ import json
 import base64
 import asyncio
 import websockets
-import datetime
+from datetime import datetime
 from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.websockets import WebSocketDisconnect
