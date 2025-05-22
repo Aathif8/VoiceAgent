@@ -84,15 +84,14 @@ async def handle_media_stream(websocket: WebSocket):
                 async for message in websocket.iter_text():
                     data = json.loads(message)
                     print("Full incoming message:", json.dumps(data, indent=2))
-                    if data.get("event") == "start":
-                        stream_info = data.get("start", {})
-                        stream_sid = stream_info.get("stream_sid")
-                        if stream_sid:
-                            print(f"Incoming Stream SID: {stream_sid}")
-                        else:
-                            print("Warning: 'stream_sid' not found in 'start' event:", data)
-                        print(f"Incoming Stream SID: {stream_sid}")
-                    elif data.get("event") == "media" and openai_ws.open:
+                    event_type = data.get("event")
+                    if event_type == "start":
+                        stream_sid = data.get("start", {}).get("streamSid")
+                        print(f"Received 'start' event with stream_sid: {stream_sid}")
+                    elif event_type == "media" and openai_ws.open:
+                        if not stream_sid:
+                            stream_sid = data.get("streamSid")
+                            print(f"Setting stream_sid from media event: {stream_sid}")
                         audio_payload = data.get("media", {}).get("payload")
                         if audio_payload:
                             audio_append = {
@@ -114,7 +113,7 @@ async def handle_media_stream(websocket: WebSocket):
                         print(f"Received event: {response['type']}", response)
                     if response['type'] == 'session.updated':
                         print(f"Session updated successfully:",response)
-                    if response['type'] == 'response.audio.delta' and response.get('delta'):
+                    if stream_sid and response['type'] == 'response.audio.delta' and response.get('delta'):
                         try:
                             audio_payload = base64.b64encode(base64.b64decode(response['delta'])).decode('utf-8')
                             audio_delta = {
