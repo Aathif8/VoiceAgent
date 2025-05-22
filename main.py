@@ -14,6 +14,7 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PORT = os.getenv("PORT", 8000)
+BASE_URL = "voiceagent-0wtp.onrender.com"
 
 current_time = datetime.now().strftime("%A, %d %B %Y at %I:%M %p")
 
@@ -60,7 +61,7 @@ async def handle_incoming_call(request: Request):
     response.pause(length=1)
     response.say("Connecting you now.")
     connect = Connect()
-    connect.stream(url="wss://your-websocket-url/media-stream")
+    connect.stream(url=f"wss://{BASE_URL}/media-stream")
     response.append(connect)
     return HTMLResponse(content=str(response), media_type="text/xml")
 
