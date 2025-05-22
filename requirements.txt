@@ -4,4 +4,4 @@ python-dotenv
 openai
 python-multipart
 twilio
-websockets 
+websockets==11.0
