@@ -83,15 +83,23 @@ async def handle_media_stream(websocket: WebSocket):
             try:
                 async for message in websocket.iter_text():
                     data = json.loads(message)
-                    if data["event"] == "start":
-                        stream_sid = data['start']['stream_sid']
+                    print("Full incoming message:", json.dumps(data, indent=2))
+                    if data.get("event") == "start":
+                        stream_info = data.get("start", {})
+                        stream_sid = stream_info.get("stream_sid")
+                        if stream_sid:
+                            print(f"Incoming Stream SID: {stream_sid}")
+                        else:
+                            print("Warning: 'stream_sid' not found in 'start' event:", data)
                         print(f"Incoming Stream SID: {stream_sid}")
-                    elif data["event"] == "media" and openai_ws.open:
-                        audio_append = {
-                            "type": "input_audio_buffer.append",
-                            "audio": data["media"]["payload"],
-                        }
-                        await openai_ws.send(json.dumps(audio_append))
+                    elif data.get("event") == "media" and openai_ws.open:
+                        audio_payload = data.get("media", {}).get("payload")
+                        if audio_payload:
+                            audio_append = {
+                                "type": "input_audio_buffer.append",
+                                "audio": audio_payload,
+                            }
+                            await openai_ws.send(json.dumps(audio_append))
             except WebSocketDisconnect:
                 print("Client disconnected")
                 if openai_ws.open:
