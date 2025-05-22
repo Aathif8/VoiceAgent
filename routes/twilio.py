@@ -7,8 +7,8 @@ from fastapi.responses import Response
 from twilio.twiml.voice_response import VoiceResponse
 from typing import Dict, List
 from services.speech_service import generate_response
-from services.data_loader import add_appointment
-from services.speech_service import transcribe_audio, normalize_date, normalize_time
+from services.data_loader import add_appointment, normalize_date, normalize_time
+from services.speech_service import transcribe_audio
 
 load_dotenv()
 ASSEMBLYAI_REALTIME_URL = "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=8000"
