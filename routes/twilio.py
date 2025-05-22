@@ -34,7 +34,7 @@ async def twilio_answer(request: Request):
 
     # Start streaming audio via Websocket
     response.start().stream(url="wss://voiceagent-0wtp.onrender.com/api/twilio/stream")
-
+    response.pause(length=30)
     # response.say("No input received. GoodBye.")
     # response.hangup()
 
